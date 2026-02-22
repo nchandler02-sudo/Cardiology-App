@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Rhythm &amp; Reason — Master Cardiology</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+<style>
+:root{
+--bg-primary:#0a0e1a;--bg-secondary:#0f172a;--bg-tertiary:#1a1035;
+--card-bg:rgba(255,255,255,0.05);--card-bg-hover:rgba(255,255,255,0.08);
+--border:rgba(255,255,255,0.08);--border-hover:rgba(255,255,255,0.15);
+--text-primary:#e2e8f0;--text-secondary:#94a3b8;--text-muted:#64748b;
+--orb1:rgba(99,102,241,0.12);--orb2:rgba(168,85,247,0.1);
+--shadow:rgba(0,0,0,0.3);--toast-bg:rgba(15,23,42,0.95);
+--scrollbar:rgba(255,255,255,0.15);--input-bg:rgba(255,255,255,0.06);
+--modal-bg:rgba(15,23,42,0.98);
+}
+.theme-light{
+--bg-primary:#f0f2f5;--bg-secondary:#e8eaed;--bg-tertiary:#f5f3ff;
+--card-bg:#ffffff;--card-bg-hover:#f8f9fa;
+--border:rgba(0,0,0,0.08);--border-hover:rgba(0,0,0,0.15);
+--text-primary:#1e293b;--text-secondary:#475569;--text-muted:#94a3b8;
+--orb1:rgba(99,102,241,0.06);--orb2:rgba(168,85,247,0.05);
+--shadow:rgba(0,0,0,0.08);--toast-bg:rgba(255,255,255,0.97);
+--scrollbar:rgba(0,0,0,0.12);--input-bg:rgba(0,0,0,0.04);
+--modal-bg:rgba(255,255,255,0.98);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:linear-gradient(135deg,var(--bg-primary),var(--bg-secondary),var(--bg-tertiary));color:var(--text-primary);min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s}
+h1,h2,h3,h4{font-family:'Playfair Display',serif;font-weight:800}
+code,.mono{font-family:'JetBrains Mono',monospace}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:3px}
+.amb-orb{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0;transition:background .3s}
+.amb-orb.o1{width:600px;height:600px;top:-100px;left:-150px;background:var(--orb1)}
+.amb-orb.o2{width:500px;height:500px;bottom:-100px;right:-100px;background:var(--orb2)}
+.app-wrap{display:flex;min-height:100vh;position:relative;z-index:1}
+/* Sidebar */
+.sidebar{width:280px;min-height:100vh;position:fixed;left:0;top:0;z-index:100;padding:24px 16px;display:flex;flex-direction:column;gap:12px;background:var(--card-bg);border-right:1px solid var(--border);backdrop-filter:blur(20px);overflow-y:auto;transition:background .3s,border .3s}
+.sidebar-logo{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;background:linear-gradient(135deg,#e2e8f0,#c7d2fe,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;line-height:1.2}
+.sidebar-tag{font-size:11px;color:var(--text-muted);text-align:center;letter-spacing:1px;text-transform:uppercase}
+.theme-toggle{display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 12px;border-radius:10px;background:var(--input-bg);border:1px solid var(--border);cursor:pointer;font-size:13px;color:var(--text-secondary);transition:all .2s}
+.theme-toggle:hover{border-color:var(--border-hover);background:var(--card-bg-hover)}
+/* Progress bar */
+.xp-bar-wrap{background:var(--input-bg);border-radius:12px;padding:10px 12px;border:1px solid var(--border)}
+.xp-bar-label{font-size:11px;color:var(--text-muted);margin-bottom:4px;display:flex;justify-content:space-between}
+.xp-bar-outer{height:18px;background:rgba(0,0,0,0.2);border-radius:9px;overflow:hidden;position:relative}
+.xp-bar-fill{height:100%;border-radius:9px;background:linear-gradient(90deg,#06b6d4,#10b981);position:relative;transition:width .6s ease;min-width:2%}
+.xp-bar-fill::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);animation:shimmer 2s infinite}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.xp-tracker{position:absolute;right:-6px;top:-4px;font-size:20px;transition:transform .3s;z-index:2}
+.xp-tracker.spin{animation:spinTracker .8s ease}
+@keyframes spinTracker{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+.xp-bar-text{font-size:10px;color:var(--text-muted);margin-top:3px;text-align:center}
+/* Block progress */
+.block-prog{background:var(--input-bg);border-radius:10px;padding:8px 12px;border:1px solid var(--border)}
+.block-prog-label{font-size:11px;color:var(--text-muted);margin-bottom:3px}
+.block-prog-bar{height:6px;background:rgba(0,0,0,0.2);border-radius:3px;overflow:hidden}
+.block-prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#6366f1,#a855f7);transition:width .5s}
+.block-prog-sub{font-size:10px;color:var(--text-muted);margin-top:2px;text-align:right}
+/* Coins + Mult */
+.sidebar-stats{display:flex;gap:8px}
+.stat-pill{flex:1;padding:6px 10px;border-radius:8px;background:var(--input-bg);border:1px solid var(--border);text-align:center;font-size:12px;color:var(--text-secondary)}
+.stat-pill .val{font-weight:700;color:var(--text-primary);font-size:14px}
+.mult-badge{background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;font-weight:700;font-size:11px;padding:2px 8px;border-radius:6px;display:inline-block}
+/* Topic list */
+.topic-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.topic-list-item{padding:8px 10px;border-radius:8px;font-size:12px;color:var(--text-secondary);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;line-height:1.3}
+.topic-list-item:hover{background:var(--card-bg-hover);color:var(--text-primary)}
+.topic-list-item .check{color:#10b981;font-size:10px}
+/* Challenge widget */
+.challenge-widget{background:var(--input-bg);border-radius:10px;padding:10px 12px;border:1px solid var(--border)}
+.challenge-widget h4{font-size:12px;color:#f59e0b;margin-bottom:4px;font-family:'DM Sans',sans-serif;font-weight:700}
+.challenge-widget p{font-size:11px;color:var(--text-muted);margin-bottom:6px}
+.challenge-bar{height:6px;background:rgba(0,0,0,0.2);border-radius:3px;overflow:hidden}
+.challenge-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#f59e0b,#ef4444);transition:width .4s}
+.challenge-sub{font-size:10px;color:var(--text-muted);margin-top:2px}
+/* Sidebar buttons */
+.sidebar-btn{padding:8px 12px;border-radius:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text-secondary);font-size:12px;cursor:pointer;transition:all .15s;text-align:center;font-family:'DM Sans',sans-serif}
+.sidebar-btn:hover{background:var(--card-bg-hover);color:var(--text-primary)}
+/* Main */
+.main-content{margin-left:280px;padding:32px;min-height:100vh;flex:1}
+/* Home grid */
+.hero-title{font-size:clamp(28px,4vw,42px);font-weight:900;background:linear-gradient(135deg,#e2e8f0,#c7d2fe,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px;line-height:1.15}
+.hero-sub{color:var(--text-muted);font-size:14px;margin-bottom:24px}
+.topic-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.topic-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:18px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;animation:fadeUp .4s ease both}
+.topic-card:hover{transform:translateY(-3px);border-color:var(--border-hover)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.topic-card .accent-bar{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px}
+.topic-card-title{font-family:'DM Sans',sans-serif;font-weight:700;font-size:15px;margin-bottom:8px;padding-left:8px;line-height:1.3}
+.topic-card-tags{display:flex;flex-wrap:wrap;gap:4px;padding-left:8px;margin-bottom:8px}
+.tag-pill{font-size:10px;padding:2px 8px;border-radius:6px;background:var(--input-bg);color:var(--text-muted);border:1px solid var(--border)}
+.topic-card-meta{font-size:11px;color:var(--text-muted);padding-left:8px;display:flex;gap:12px}
+.topic-card .opened-check{position:absolute;top:10px;right:10px;color:#10b981;font-size:16px}
+/* Detail view */
+.back-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text-secondary);font-size:13px;cursor:pointer;transition:all .15s;margin-bottom:16px;font-family:'DM Sans',sans-serif}
+.back-btn:hover{background:var(--card-bg-hover);color:var(--text-primary)}
+.detail-title{font-size:28px;margin-bottom:16px;line-height:1.2}
+.section-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;position:relative;transition:all .3s}
+.section-card.panic{border-left:4px solid #ef4444}
+.section-card.icu{border-left:4px solid #f97316}
+.section-card.orders{border-left:4px solid #3b82f6}
+.section-card.cdi{border-left:4px solid #14b8a6}
+.section-card.overview{border-left:4px solid #a855f7}
+.section-card.refs{border-left:4px solid #6366f1}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.section-header h3{font-size:16px;font-family:'DM Sans',sans-serif;font-weight:700}
+.section-viewed{font-size:14px;opacity:.6}
+.section-viewed.seen{opacity:1;color:#10b981}
+.bullet-list{list-style:none;display:flex;flex-direction:column;gap:8px}
+.bullet-list li{font-size:13px;line-height:1.6;color:var(--text-secondary);padding-left:16px;position:relative}
+.bullet-list li::before{content:'•';position:absolute;left:0;color:var(--text-muted)}
+.bullet-list li strong{color:var(--text-primary);font-weight:600}
+.highlight-pill{background:rgba(99,102,241,0.2);color:#a5b4fc;padding:1px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:12px}
+.theme-light .highlight-pill{background:rgba(99,102,241,0.12);color:#4f46e5}
+/* Quiz */
+.quiz-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px}
+.quiz-card h3{font-family:'DM Sans',sans-serif;font-weight:700;font-size:16px;margin-bottom:12px;color:#a78bfa}
+.quiz-stem{font-size:13px;line-height:1.7;color:var(--text-secondary);margin-bottom:16px}
+.quiz-option{display:block;width:100%;text-align:left;padding:10px 14px;margin-bottom:6px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-secondary);font-size:13px;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;line-height:1.5}
+.quiz-option:hover:not(.answered){border-color:var(--border-hover);background:var(--card-bg-hover)}
+.quiz-option.correct{border-color:#10b981;background:rgba(16,185,129,0.12);color:#10b981}
+.quiz-option.wrong{border-color:#ef4444;background:rgba(239,68,68,0.1);color:#ef4444}
+.quiz-option.answered{cursor:default}
+.quiz-rationale{margin-top:12px;padding:12px;border-radius:10px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.2);font-size:12px;line-height:1.6;color:var(--text-secondary)}
+/* Micro Q */
+.micro-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:16px}
+.micro-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;min-height:100px}
+.micro-card:hover{border-color:var(--border-hover)}
+.micro-card .q-text{font-size:13px;color:var(--text-secondary);line-height:1.5}
+.micro-card .a-text{font-size:13px;color:#10b981;line-height:1.5;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+/* Refs */
+.ref-link{display:block;font-size:12px;color:#818cf8;text-decoration:none;padding:4px 0;line-height:1.5;word-break:break-all}
+.ref-link:hover{text-decoration:underline}
+/* Toast */
+.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{padding:10px 16px;border-radius:10px;background:var(--toast-bg);border:1px solid var(--border);color:var(--text-primary);font-size:13px;backdrop-filter:blur(10px);animation:toastIn .3s ease,toastOut .3s ease 2.7s;pointer-events:auto;box-shadow:0 4px 12px var(--shadow)}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateX(20px)}}
+/* XP fly */
+.xp-fly{position:fixed;pointer-events:none;z-index:9998;font-size:14px;font-weight:700;color:#10b981;animation:flyUp 1.2s ease forwards}
+@keyframes flyUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-60px)}}
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:5000;display:flex;align-items:center;justify-content:center;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-box{background:var(--modal-bg);border:1px solid var(--border);border-radius:18px;padding:28px;max-width:600px;width:92%;max-height:85vh;overflow-y:auto;position:relative}
+.modal-close{position:absolute;top:12px;right:16px;font-size:20px;color:var(--text-muted);cursor:pointer;background:none;border:none;padding:4px}
+.modal-title{font-size:22px;margin-bottom:16px}
+/* Badge grid */
+.badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin-bottom:16px}
+.badge-item{text-align:center;padding:10px 4px;border-radius:10px;background:var(--input-bg);border:1px solid var(--border);transition:all .2s}
+.badge-item.locked{opacity:.4;filter:grayscale(1)}
+.badge-item .badge-emoji{font-size:24px}
+.badge-item .badge-name{font-size:9px;color:var(--text-muted);margin-top:2px;line-height:1.2}
+/* Shop */
+.shop-tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.shop-tab{padding:6px 14px;border-radius:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text-muted);font-size:12px;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif}
+.shop-tab.active{background:rgba(99,102,241,0.2);color:#a5b4fc;border-color:rgba(99,102,241,0.3)}
+.shop-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:10px;background:var(--input-bg);border:1px solid var(--border);margin-bottom:6px}
+.shop-item-info{display:flex;align-items:center;gap:10px;flex:1}
+.shop-item-emoji{font-size:24px}
+.shop-item-text{font-size:12px;color:var(--text-secondary);line-height:1.3}
+.shop-item-text .name{font-weight:600;color:var(--text-primary);font-size:13px}
+.shop-btn{padding:5px 12px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);transition:all .15s;font-family:'DM Sans',sans-serif}
+.shop-btn.buy{background:rgba(99,102,241,0.2);color:#a5b4fc;border-color:rgba(99,102,241,0.3)}
+.shop-btn.buy:hover{background:rgba(99,102,241,0.35)}
+.shop-btn.owned{background:var(--input-bg);color:var(--text-muted);cursor:default}
+.shop-btn.equip{background:rgba(16,185,129,0.15);color:#10b981;border-color:rgba(16,185,129,0.3)}
+/* Profile stat */
+.profile-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.profile-stat{text-align:center;padding:10px;border-radius:10px;background:var(--input-bg);border:1px solid var(--border)}
+.profile-stat .val{font-size:18px;font-weight:700;color:var(--text-primary)}
+.profile-stat .lbl{font-size:10px;color:var(--text-muted)}
+.profile-actions{display:flex;gap:8px;flex-wrap:wrap}
+.profile-actions button{padding:8px 16px;border-radius:8px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--input-bg);color:var(--text-secondary);font-family:'DM Sans',sans-serif;transition:all .15s}
+.profile-actions button:hover{background:var(--card-bg-hover)}
+.profile-actions button.danger{border-color:rgba(239,68,68,0.3);color:#ef4444}
+/* Mobile */
+.mobile-top{display:none;position:fixed;top:0;left:0;right:0;z-index:200;background:var(--card-bg);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:8px 16px;align-items:center;justify-content:space-between;transition:background .3s}
+.mobile-top .hamburger{font-size:22px;cursor:pointer;background:none;border:none;color:var(--text-primary);padding:4px}
+.mobile-top .top-right{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-secondary)}
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300}
+.drawer-overlay.open{display:block}
+.sidebar.mobile-open{transform:translateX(0)!important;z-index:400}
+/* Loading */
+.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;height:80vh;gap:16px;color:var(--text-muted)}
+.loading-bar{width:200px;height:6px;background:var(--input-bg);border-radius:3px;overflow:hidden}
+.loading-fill{height:100%;background:linear-gradient(90deg,#6366f1,#a855f7);border-radius:3px;transition:width .3s}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);transition:transform .3s}
+  .main-content{margin-left:0;padding:16px;padding-top:56px}
+  .mobile-top{display:flex}
+  .topic-grid{grid-template-columns:1fr}
+  .micro-grid{grid-template-columns:1fr}
+  .profile-stats{grid-template-columns:repeat(2,1fr)}
+  .hero-title{font-size:24px}
+}
+</style>
+</head>
+<body>
+<div class="amb-orb o1"></div>
+<div class="amb-orb o2"></div>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback,useMemo}=React;
+
+// ═══════════════════════════════ CONSTANTS ═══════════════════════════════
+const STORAGE_KEY='rhythmAndReason';
+const APP_NAME='Rhythm & Reason';
+const TAGLINE='Master Cardiology, One Beat at a Time';
+const TRACKER_EMOJI='❤️';
+
+const ACCENT_COLORS=["#6366f1","#a855f7","#ec4899","#f97316","#14b8a6","#3b82f6","#8b5cf6","#ef4444","#10b981","#f59e0b"];
+
+const LEVELS=[
+  {level:1,name:'Murmur Mumbler',xp:0},
+  {level:2,name:'Troponin Trainee',xp:500},
+  {level:3,name:'Rate Controller',xp:1200},
+  {level:4,name:'Stent Whisperer',xp:2500},
+  {level:5,name:'Rhythm Wrangler',xp:4500},
+  {level:6,name:'Code Blue Cowboy',xp:7500},
+  {level:7,name:'Echo Virtuoso',xp:11500},
+  {level:8,name:'STEMI Slayer',xp:17000},
+  {level:9,name:'Cath Lab Commander',xp:24000},
+  {level:10,name:'Interventional Immortal',xp:35000},
+];
+
+const BADGES=[
+  // Topic mastery (12)
+  {id:'acs-ace',name:'ACS Ace',emoji:'💔',cat:'topic',keywords:['acute coronary','stemi','nstemi']},
+  {id:'hf-hero',name:'Heart Failure Hero',emoji:'🫀',cat:'topic',keywords:['heart failure','hfref','hfpef','decompensated']},
+  {id:'rhythm-rebel',name:'Rhythm Rebel',emoji:'💓',cat:'topic',keywords:['atrial fibrillation','flutter','svt','supraventricular']},
+  {id:'valve-virtuoso',name:'Valve Virtuoso',emoji:'🔧',cat:'topic',keywords:['valvular','prosthetic valve','stenosis','regurgitation']},
+  {id:'shock-doc',name:'Shock Doc',emoji:'⚡',cat:'topic',keywords:['cardiogenic shock','decompensated']},
+  {id:'aorta-avenger',name:'Aorta Avenger',emoji:'🩸',cat:'topic',keywords:['aortic disease','dissection','aneurysm']},
+  {id:'lipid-lord',name:'Lipid Lord',emoji:'🧬',cat:'topic',keywords:['lipid','dyslipidemia','cholesterol','ascvd']},
+  {id:'bp-boss',name:'BP Boss',emoji:'🎯',cat:'topic',keywords:['hypertension','hypotension']},
+  {id:'pacer-pro',name:'Pacer Pro',emoji:'🔋',cat:'topic',keywords:['bradyarrhythmia','pacemaker','av block']},
+  {id:'endo-detective',name:'Endocarditis Detective',emoji:'🔍',cat:'topic',keywords:['endocarditis','infective']},
+  {id:'pericardium-pal',name:'Pericardium Pal',emoji:'🛡️',cat:'topic',keywords:['pericardial','pericarditis','tamponade']},
+  {id:'vt-vanquisher',name:'VT Vanquisher',emoji:'⚔️',cat:'topic',keywords:['ventricular arrhythmia','sudden cardiac','icd']},
+  // Streak (8)
+  {id:'s2',name:'Back-to-Back Beats',emoji:'🥁',cat:'streak',condition:'streak2'},
+  {id:'s4',name:'Sinus Rhythm Streak',emoji:'📈',cat:'streak',condition:'streak4'},
+  {id:'s6',name:'Sustained Sinus',emoji:'🔥',cat:'streak',condition:'streak6'},
+  {id:'s8',name:'Iron Heart',emoji:'🦾',cat:'streak',condition:'streak8'},
+  {id:'q100',name:'Century of Questions',emoji:'💯',cat:'streak',condition:'quiz100'},
+  {id:'t15',name:'Grand Rounds Regular',emoji:'📚',cat:'streak',condition:'topics15'},
+  {id:'d10',name:'10-Day Attending',emoji:'📅',cat:'streak',condition:'days10'},
+  {id:'wknd',name:'Weekend Warrior',emoji:'🏆',cat:'streak',condition:'weekendChallenge'},
+  // Skill (7)
+  {id:'lyte-master',name:'Lyte Master',emoji:'⚗️',cat:'skill',condition:'electrolyteQ10'},
+  {id:'culture-king',name:'Culture King',emoji:'🧫',cat:'skill',condition:'sepsisPerf'},
+  {id:'hot-streak',name:'Hot Streak',emoji:'🌶️',cat:'skill',condition:'hotStreak'},
+  {id:'speed-read',name:'Speed Reader',emoji:'⏱️',cat:'skill',condition:'speed4min'},
+  {id:'perfect-ekg',name:'Perfect EKG',emoji:'📊',cat:'skill',condition:'perfectQuiz'},
+  {id:'mult-max',name:'5x Multiplier',emoji:'🚀',cat:'skill',condition:'mult5x'},
+  {id:'q200',name:'Quiz Bicentennial',emoji:'🎓',cat:'skill',condition:'quiz200'},
+  // Secret (5)
+  {id:'coin-hoard',name:'Coin Hoarder',emoji:'🪙',cat:'secret',condition:'coins500'},
+  {id:'3am-legend',name:'3 AM Legend',emoji:'🌃',cat:'secret',condition:'lvl10at3am'},
+  {id:'flip-all',name:'Flip Master',emoji:'🃏',cat:'secret',condition:'allMicro'},
+  {id:'all-badges',name:'Completionist',emoji:'👑',cat:'secret',condition:'allBadges'},
+  {id:'ghost-run',name:'Ghost Run',emoji:'👻',cat:'secret',condition:'ghost10'},
+];
+
+const SHOP={
+  avatars:[
+    {id:'a1',name:'Stethoscope',desc:'The classic instrument',price:100,emoji:'🩺'},
+    {id:'a2',name:'EKG Strip',desc:'Sinus rhythm vibes',price:150,emoji:'📈'},
+    {id:'a3',name:'Defibrillator',desc:'Clear!',price:200,emoji:'⚡'},
+    {id:'a4',name:'Cath Lab',desc:'Wire it up',price:250,emoji:'🏥'},
+    {id:'a5',name:'Balloon Pump',desc:'Counterpulsation king',price:300,emoji:'🎈'},
+    {id:'a6',name:'Pacemaker',desc:'Set the rhythm',price:350,emoji:'🔋'},
+    {id:'a7',name:'Echo Probe',desc:'See through walls',price:400,emoji:'📡'},
+    {id:'a8',name:'Golden Heart',desc:'The ultimate',price:500,emoji:'💛'},
+  ],
+  memes:[
+    {id:'m1',name:'"Paged at 3 AM: patient\'s troponin is 0.01"',price:80},
+    {id:'m2',name:'"Is this STEMI or early repol? Asking for a friend"',price:80},
+    {id:'m3',name:'"HR 150 in the Fontan patient — anyway"',price:100},
+    {id:'m4',name:'"Just one more liter of NS" — said no cardiologist ever',price:100},
+    {id:'m5',name:'"Cardiology recommends echo in the morning" (it\'s always morning)',price:120},
+    {id:'m6',name:'"Have you tried turning the pacemaker off and on again?"',price:120},
+    {id:'m7',name:'"BNP of 30,000 — patient feels fine actually"',price:150},
+  ],
+  certs:[
+    {id:'c1',name:'ACLS Survivor Certificate',desc:'You passed (barely)',price:120},
+    {id:'c2',name:'Night Float Cardiology Diploma',desc:'Certified nocturnal cardiologist',price:150},
+    {id:'c3',name:'Interventional Fellowship (Honorary)',desc:'We believe in you',price:200},
+  ],
+  boosts:[
+    {id:'boost-24h',name:'24-Hour ×1.5 Boost',desc:'Temporary XP multiplier',price:300,consumable:true},
+    {id:'custom-bar',name:'Custom Progress Bar Color',desc:'Choose your gradient',price:200},
+    {id:'heart-sounds',name:'Heart Sounds Pack',desc:'Cardiac-themed level-up sounds',price:150},
+  ]
+};
+
+const WEEKLY_CHALLENGES=[
+  {name:'Triple Vessel Study',desc:'Open 3 different topics',target:3},
+  {name:'Five-Lead Mastery',desc:'Answer 5 quiz questions correctly',target:5},
+  {name:'Marathon Monitor',desc:'Flip 20 micro-questions',target:20},
+  {name:'Perfect Code',desc:'Get a perfect score on any topic quiz',target:1},
+  {name:'STEMI Activation',desc:'Complete all sections of 1 topic',target:1},
+  {name:'Grand Rounds',desc:'Open 5 topics in one week',target:5},
+  {name:'XP Surge',desc:'Earn 500 XP this week',target:500},
+];
+
+// ═══════════════════════════════ HELPERS ═══════════════════════════════
+const today=()=>new Date().toISOString().split('T')[0];
+const getWeekNum=()=>{const d=new Date();const s=new Date(d.getFullYear(),0,1);return Math.ceil(((d-s)/864e5+s.getDay()+1)/7)};
+const isNightOwl=()=>{const h=new Date().getHours();return h>=22||h<6};
+
+function getLevel(xp){
+  let lv=LEVELS[0];
+  for(const l of LEVELS)if(xp>=l.xp)lv=l;
+  return lv;
+}
+function getNextLevel(xp){
+  for(const l of LEVELS)if(xp<l.xp)return l;
+  return null;
+}
+
+const defaultState={
+  xp:0,level:1,coins:0,coinsLifetime:0,
+  streak:{count:0,lastActiveDate:null},
+  badges:[],topicsOpened:[],quizAnswers:{},microFlipped:[],
+  sectionsViewed:{},
+  shop:{purchased:[],equipped:{avatar:null,meme:null}},
+  hotStreak:{count:0,bonusExpiresAt:null},
+  challengeBonus:{multiplier:1,expiresAt:null},
+  boostExpiry:null,soundEnabled:false,daysLogged:[],
+  weeklyChallenge:{week:null,progress:0},
+  sessionStartXP:0,nightQuizCorrect:0,nightQuizTotal:0,nightStart:null,
+  theme:'dark',blockStartDate:null,username:'Resident'
+};
+
+function loadState(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(raw){const parsed=JSON.parse(raw);return{...defaultState,...parsed,streak:{...defaultState.streak,...(parsed.streak||{})},shop:{...defaultState.shop,...(parsed.shop||{})},hotStreak:{...defaultState.hotStreak,...(parsed.hotStreak||{})},challengeBonus:{...defaultState.challengeBonus,...(parsed.challengeBonus||{})},weeklyChallenge:{...defaultState.weeklyChallenge,...(parsed.weeklyChallenge||{})}}}
+  }catch(e){console.warn('State load error',e)}
+  return{...defaultState};
+}
+function saveState(s){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(s))}catch(e){console.warn('Save error',e)}}
+
+// ═══════════════════════════════ MD PARSER ═══════════════════════════════
+function parseMD(text,filename){
+  // Normalize line endings (Windows \r\n → \n)
+  text=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  // Detect if we got HTML instead of markdown (Jekyll/GitHub Pages issue)
+  if(text.trim().startsWith('<!') || text.trim().startsWith('<html') || text.trim().startsWith('<HTML')){
+    console.error('[RR] Got HTML instead of MD for',filename,'— Add .nojekyll file to repo root!');
+    return{id:filename.replace(/\.md$/,''),title:filename.replace(/\.md$/,'').replace(/-/g,' '),tags:[],version:'',sections:{}};
+  }
+  const lines=text.split('\n');
+  let title='',tags=[],version='',id=filename.replace(/\.md$/,'');
+  // YAML front
+  let inYaml=false,yamlEnd=0;
+  for(let i=0;i<lines.length;i++){
+    const l=lines[i].trim();
+    if(i===0&&l==='---'){inYaml=true;continue}
+    if(inYaml&&l==='---'){yamlEnd=i;break}
+    if(inYaml){
+      const m=l.match(/^(\w+):\s*(.+)/);
+      if(m){
+        if(m[1]==='title')title=m[2].trim();
+        if(m[1]==='tags'){const tm=m[2].match(/\[(.*)\]/);if(tm)tags=tm[1].split(',').map(t=>t.trim())}
+        if(m[1]==='version')version=m[2].trim();
+        if(m[1]==='id')id=m[2].trim();
+      }
+    }
+  }
+  const content=lines.slice(yamlEnd+1);
+  // H1 fallback
+  if(!title){const h1=content.find(l=>l.match(/^#\s+/));if(h1)title=h1.replace(/^#\s+/,'').trim()}
+  // Split sections
+  const sections={};let curKey=null,curLines=[];
+  for(const line of content){
+    if(line.match(/^##\s+/)&&!line.match(/^###/)){
+      if(curKey)sections[curKey]=curLines;
+      const heading=line.replace(/^##\s+/,'').trim();
+      curKey=heading;curLines=[];
+    } else {
+      curLines.push(line);
+    }
+  }
+  if(curKey)sections[curKey]=curLines;
+  // Map sections
+  const mapped={};
+  for(const[heading,lns] of Object.entries(sections)){
+    const h=heading.toLowerCase();
+    if(h.includes('panic'))mapped.panic_card=parseBullets(lns);
+    else if(h.includes('brief overview'))mapped.brief_overview=parseBullets(lns);
+    else if(h.includes('icu')||h.includes('consult trigger'))mapped.icu_consult_triggers=parseBullets(lns);
+    else if(h.includes('orders'))mapped.orders_to_place_now=parseBullets(lns);
+    else if(h.includes('cdi'))mapped.cdi=parseBullets(lns);
+    else if(h.includes('reference')||h.includes('guideline'))mapped.references=parseRefs(lns);
+    else if((h.includes('check')&&(h.includes('micro')||h.includes('yourself')))){mapped.micro_questions=parseMicro(lns,id)}
+    else if(h.match(/abim|quiz.*case|second.*case|pitfall/i)){
+      if(!mapped.quizzes)mapped.quizzes=[];
+      mapped.quizzes.push(parseQuiz(lns,heading));
+    }
+  }
+  return{id,title,tags,version,sections:mapped};
+}
+
+function parseBullets(lines){
+  return lines.filter(l=>l.trim().startsWith('-')||l.trim().startsWith('*')).map(l=>l.replace(/^[\s]*[-*]\s*/,'').trim()).filter(Boolean);
+}
+
+function parseRefs(lines){
+  const refs=[];
+  for(const l of lines){
+    const t=l.trim();
+    if(!t.startsWith('-')&&!t.startsWith('*'))continue;
+    const clean=t.replace(/^[-*]\s*/,'');
+    const urlMatch=clean.match(/(https?:\/\/[^\s)]+)/);
+    const url=urlMatch?urlMatch[1]:'';
+    const label=clean.replace(url,'').replace(/[-—|]\s*$/,'').replace(/^\s*[-—|]\s*/,'').trim();
+    refs.push({label:label||url,url});
+  }
+  return refs;
+}
+
+function parseMicro(lines,topicId){
+  const qs=[];let curQ=null;
+  for(const l of lines){
+    const t=l.trim();
+    const qm=t.match(/^-\s*Q:\s*(.*)/);
+    const am=t.match(/^\s*A:\s*(.*)/);
+    if(qm){if(curQ)qs.push(curQ);curQ={q:qm[1].trim(),a:'',id:topicId+'M'+qs.length}}
+    else if(am&&curQ){curQ.a=am[1].trim();qs.push(curQ);curQ=null}
+  }
+  if(curQ)qs.push(curQ);
+  return qs;
+}
+
+function parseQuiz(lines,heading){
+  const subMap={};let curSub=null,curLines=[];
+  for(const l of lines){
+    if(l.trim().match(/^###\s+/)){
+      if(curSub)subMap[curSub.toLowerCase()]=curLines;
+      curSub=l.trim().replace(/^###\s+/,'');curLines=[];
+    } else curLines.push(l);
+  }
+  if(curSub)subMap[curSub.toLowerCase()]=curLines;
+  const stem=(subMap['stem']||[]).filter(l=>l.trim()).join(' ').trim();
+  const options=(subMap['options']||[]).filter(l=>l.trim().match(/^[A-E]\.\s/)).map(l=>{
+    const m=l.trim().match(/^([A-E])\.\s+(.*)/);
+    return m?{letter:m[1],text:m[2].trim()}:null;
+  }).filter(Boolean);
+  const correctLine=(subMap['correct answer']||[]).find(l=>l.trim());
+  const correct=correctLine?correctLine.trim().charAt(0):'';
+  const rationale=(subMap['rationale']||subMap['rationale (2–4 sentences)']||[]).filter(l=>l.trim()).join(' ').trim();
+  return{title:heading,stem,options,correct,rationale};
+}
+
+function renderBulletText(text){
+  // Bold
+  let parts=[];
+  const boldRe=/\*\*(.+?)\*\*/g;
+  let last=0,m;
+  const segs=[];
+  while((m=boldRe.exec(text))!==null){
+    if(m.index>last)segs.push({type:'text',val:text.slice(last,m.index)});
+    segs.push({type:'bold',val:m[1]});
+    last=boldRe.lastIndex;
+  }
+  if(last<text.length)segs.push({type:'text',val:text.slice(last)});
+  return segs.map((s,i)=>{
+    let content=s.val;
+    // Curly braces → pills
+    const pillRe=/\{([^}]+)\}/g;
+    const pillParts=[];let pl=0,pm;
+    while((pm=pillRe.exec(content))!==null){
+      if(pm.index>pl)pillParts.push(content.slice(pl,pm.index));
+      pillParts.push(React.createElement('span',{key:'p'+i+pl,className:'highlight-pill'},pm[1]));
+      pl=pillRe.lastIndex;
+    }
+    if(pl<content.length)pillParts.push(content.slice(pl));
+    const inner=pillParts.length>1?pillParts:content;
+    if(s.type==='bold')return React.createElement('strong',{key:i},inner);
+    return React.createElement(React.Fragment,{key:i},inner);
+  });
+}
+
+// ═══════════════════════════════ SOUND ═══════════════════════════════
+const audioCtxRef={current:null};
+function getAudioCtx(){if(!audioCtxRef.current)audioCtxRef.current=new(window.AudioContext||window.webkitAudioContext)();return audioCtxRef.current}
+function playSound(type){
+  try{
+    const ctx=getAudioCtx();const osc=ctx.createOscillator();const gain=ctx.createGain();
+    osc.connect(gain);gain.connect(ctx.destination);gain.gain.value=0.08;
+    if(type==='correct'){osc.frequency.value=880;osc.type='sine';gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.3);osc.start();osc.stop(ctx.currentTime+0.3)}
+    else if(type==='wrong'){osc.frequency.value=200;osc.type='square';gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.4);osc.start();osc.stop(ctx.currentTime+0.4)}
+    else if(type==='xp'){osc.frequency.value=660;osc.type='sine';gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.15);osc.start();osc.stop(ctx.currentTime+0.15)}
+    else if(type==='levelup'){osc.frequency.value=523;osc.type='sine';gain.gain.value=0.1;osc.start();setTimeout(()=>{osc.frequency.value=659},150);setTimeout(()=>{osc.frequency.value=784},300);gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.6);osc.stop(ctx.currentTime+0.6)}
+    else if(type==='badge'){osc.frequency.value=1047;osc.type='triangle';gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.4);osc.start();osc.stop(ctx.currentTime+0.4)}
+    else if(type==='coin'){osc.frequency.value=1200;osc.type='sine';gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.1);osc.start();osc.stop(ctx.currentTime+0.1)}
+  }catch(e){}
+}
+
+// ═══════════════════════════════ MAIN APP ═══════════════════════════════
+function App(){
+  const [state,setState]=useState(loadState);
+  const [topics,setTopics]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [loadProg,setLoadProg]=useState(0);
+  const [view,setView]=useState('home');
+  const [currentTopic,setCurrentTopic]=useState(null);
+  const [toasts,setToasts]=useState([]);
+  const [xpFlies,setXpFlies]=useState([]);
+  const [modal,setModal]=useState(null);
+  const [drawerOpen,setDrawerOpen]=useState(false);
+  const [trackerSpin,setTrackerSpin]=useState(false);
+
+  const s=state;
+  const up=(fn)=>setState(prev=>{const n=typeof fn==='function'?fn(prev):{...prev,...fn};saveState(n);return n});
+
+  // Theme class
+  useEffect(()=>{document.getElementById('root').className=s.theme==='light'?'theme-light':''},[s.theme]);
+
+  // Load topics
+  useEffect(()=>{
+    (async()=>{
+      try{
+        const mRes=await fetch('topics/manifest.json');
+        const mData=await mRes.json();
+        const files=mData.topics||mData;
+        const loaded=[];
+        for(let i=0;i<files.length;i++){
+          try{
+            const r=await fetch('topics/'+files[i]);
+            if(!r.ok){console.error('[RR] Fetch failed for',files[i],'status:',r.status);continue}
+            const txt=await r.text();
+            if(!txt||txt.trim().length<10){console.error('[RR] Empty/tiny response for',files[i]);continue}
+            console.log('[RR] Loaded',files[i],txt.length,'chars');
+            const parsed=parseMD(txt,files[i]);
+            console.log('[RR] Parsed',files[i],'→ sections:',Object.keys(parsed.sections),'title:',parsed.title);
+            loaded.push(parsed);
+          }catch(e){console.warn('Failed:',files[i],e)}
+          setLoadProg(Math.round(((i+1)/files.length)*100));
+        }
+        setTopics(loaded);
+      }catch(e){console.warn('Manifest error',e)}
+      setLoading(false);
+    })();
+  },[]);
+
+  // Streak + day tracking
+  useEffect(()=>{
+    const td=today();
+    up(prev=>{
+      const n={...prev};
+      if(!n.blockStartDate)n.blockStartDate=td;
+      if(!n.daysLogged.includes(td))n.daysLogged=[...n.daysLogged,td];
+      // streak
+      const last=n.streak.lastActiveDate;
+      if(!last){n.streak={count:1,lastActiveDate:td}}
+      else if(last===td){/*same day*/}
+      else{
+        const diff=Math.floor((new Date(td)-new Date(last))/864e5);
+        if(diff===1)n.streak={count:n.streak.count+1,lastActiveDate:td};
+        else n.streak={count:1,lastActiveDate:td};
+      }
+      return n;
+    });
+  },[]);
+
+  // Toast
+  const toast=(msg)=>{const id=Date.now()+Math.random();setToasts(p=>[...p,{id,msg}]);setTimeout(()=>setToasts(p=>p.filter(t=>t.id!==id)),3000)};
+
+  // XP fly
+  const showXpFly=(amount,e)=>{
+    const x=e?.clientX||window.innerWidth/2;
+    const y=e?.clientY||200;
+    const id=Date.now()+Math.random();
+    setXpFlies(p=>[...p,{id,x,y,amount}]);
+    setTimeout(()=>setXpFlies(p=>p.filter(f=>f.id!==id)),1300);
+  };
+
+  // Multiplier calc
+  const getMultiplier=useCallback(()=>{
+    let m=1;
+    const sc=s.streak.count;
+    if(sc>=8)m*=3;else if(sc>=6)m*=2.5;else if(sc>=4)m*=2;else if(sc>=2)m*=1.5;
+    if(isNightOwl())m*=1.3;
+    if(s.hotStreak.bonusExpiresAt&&new Date(s.hotStreak.bonusExpiresAt)>new Date())m*=1.8;
+    if(s.challengeBonus.expiresAt&&new Date(s.challengeBonus.expiresAt)>new Date()&&s.challengeBonus.multiplier>1)m*=s.challengeBonus.multiplier;
+    if(s.boostExpiry&&new Date(s.boostExpiry)>new Date())m*=1.5;
+    return Math.min(m,5);
+  },[s.streak.count,s.hotStreak.bonusExpiresAt,s.challengeBonus,s.boostExpiry]);
+
+  const mult=getMultiplier();
+
+  // Award XP
+  const awardXP=(base,e)=>{
+    const amt=Math.round(base*mult);
+    up(prev=>{
+      const n={...prev};
+      n.xp+=amt;
+      const oldLvl=getLevel(prev.xp);
+      const newLvl=getLevel(n.xp);
+      // Coins: 10 per 100 XP
+      const oldHundreds=Math.floor(prev.xp/100);
+      const newHundreds=Math.floor(n.xp/100);
+      n.coins+=(newHundreds-oldHundreds)*10;
+      n.coinsLifetime+=(newHundreds-oldHundreds)*10;
+      if(newLvl.level>oldLvl.level){
+        n.level=newLvl.level;
+        n.coins+=50;n.coinsLifetime+=50;
+        setTimeout(()=>{toast(`🎉 Level Up! ${newLvl.name}`);confetti({particleCount:100,spread:70,origin:{y:0.6}});setTrackerSpin(true);setTimeout(()=>setTrackerSpin(false),800)},100);
+        if(s.soundEnabled)setTimeout(()=>playSound('levelup'),100);
+      }
+      return n;
+    });
+    if(s.soundEnabled)playSound('xp');
+    showXpFly(Math.round(base*mult),e);
+  };
+
+  // Award badge
+  const awardBadge=(badge)=>{
+    if(s.badges.includes(badge.id))return;
+    up(prev=>({...prev,badges:[...prev.badges,badge.id],coins:prev.coins+25,coinsLifetime:prev.coinsLifetime+25}));
+    toast(`🏅 Badge: ${badge.name} ${badge.emoji}`);
+    if(s.soundEnabled)playSound('badge');
+    confetti({particleCount:50,spread:50,origin:{y:0.5}});
+  };
+
+  // Check badges
+  const checkBadges=useCallback((newState)=>{
+    const ns=newState||s;
+    BADGES.forEach(b=>{
+      if(ns.badges.includes(b.id))return;
+      if(b.cat==='topic'){
+        const found=ns.topicsOpened.some(tid=>{
+          const topic=topics.find(t=>t.id===tid);
+          if(!topic)return false;
+          const combined=(topic.title+' '+topic.tags.join(' ')).toLowerCase();
+          return b.keywords.some(k=>combined.includes(k));
+        });
+        if(found)awardBadge(b);
+      }
+      if(b.cat==='streak'){
+        if(b.condition==='streak2'&&ns.streak.count>=2)awardBadge(b);
+        if(b.condition==='streak4'&&ns.streak.count>=4)awardBadge(b);
+        if(b.condition==='streak6'&&ns.streak.count>=6)awardBadge(b);
+        if(b.condition==='streak8'&&ns.streak.count>=8)awardBadge(b);
+        if(b.condition==='quiz100'&&Object.keys(ns.quizAnswers).length>=100)awardBadge(b);
+        if(b.condition==='topics15'&&ns.topicsOpened.length>=15)awardBadge(b);
+        if(b.condition==='days10'&&ns.daysLogged.length>=10)awardBadge(b);
+      }
+      if(b.cat==='skill'){
+        if(b.condition==='hotStreak'&&ns.hotStreak.count>=5)awardBadge(b);
+        if(b.condition==='mult5x'&&mult>=5)awardBadge(b);
+        if(b.condition==='quiz200'&&Object.keys(ns.quizAnswers).length>=200)awardBadge(b);
+      }
+      if(b.cat==='secret'){
+        if(b.condition==='coins500'&&ns.coinsLifetime>=500)awardBadge(b);
+        if(b.condition==='lvl10at3am'&&ns.level>=10&&new Date().getHours()===3)awardBadge(b);
+        if(b.condition==='allMicro'){
+          const totalMicro=topics.reduce((a,t)=>(t.sections.micro_questions||[]).length+a,0);
+          if(totalMicro>0&&ns.microFlipped.length>=totalMicro)awardBadge(b);
+        }
+      }
+    });
+  },[s,topics,mult]);
+
+  useEffect(()=>{if(topics.length)checkBadges()},[s.topicsOpened,s.quizAnswers,s.streak.count,s.daysLogged,s.microFlipped]);
+
+  // Open topic
+  const openTopic=(topic)=>{
+    setCurrentTopic(topic);setView('detail');setDrawerOpen(false);
+    if(!s.topicsOpened.includes(topic.id)){
+      up(prev=>({...prev,topicsOpened:[...prev.topicsOpened,topic.id]}));
+      awardXP(75);
+      toast(`📖 +75 XP — Opened: ${topic.title}`);
+    }
+  };
+
+  // Section view XP
+  const onSectionView=(topicId,sectionKey)=>{
+    const viewed=s.sectionsViewed[topicId]||[];
+    if(viewed.includes(sectionKey))return;
+    up(prev=>{
+      const sv={...prev.sectionsViewed};
+      sv[topicId]=[...(sv[topicId]||[]),sectionKey];
+      return{...prev,sectionsViewed:sv};
+    });
+    awardXP(40);
+  };
+
+  // Quiz answer
+  const onQuizAnswer=(qId,letter,correct,e)=>{
+    if(s.quizAnswers[qId])return;
+    const isCorrect=letter===correct;
+    up(prev=>{
+      const n={...prev,quizAnswers:{...prev.quizAnswers,[qId]:letter}};
+      if(isCorrect){
+        n.hotStreak={count:prev.hotStreak.count+1,bonusExpiresAt:prev.hotStreak.count+1>=5?new Date(Date.now()+600000).toISOString():prev.hotStreak.bonusExpiresAt};
+        n.nightQuizCorrect=prev.nightQuizCorrect+1;
+      }else{
+        n.hotStreak={count:0,bonusExpiresAt:null};
+      }
+      n.nightQuizTotal=prev.nightQuizTotal+1;
+      return n;
+    });
+    if(isCorrect){awardXP(150,e);toast('✅ Correct! +150 XP');if(s.soundEnabled)playSound('correct')}
+    else{toast('❌ Incorrect — review the rationale');if(s.soundEnabled)playSound('wrong')}
+  };
+
+  // Micro flip
+  const onMicroFlip=(mId)=>{
+    if(s.microFlipped.includes(mId))return;
+    up(prev=>({...prev,microFlipped:[...prev.microFlipped,mId]}));
+    awardXP(40);
+  };
+
+  // Weekly challenge
+  const weekNum=getWeekNum();
+  const challenge=WEEKLY_CHALLENGES[weekNum%7];
+  useEffect(()=>{
+    if(s.weeklyChallenge.week!==weekNum)up(prev=>({...prev,weeklyChallenge:{week:weekNum,progress:0}}));
+  },[weekNum]);
+
+  // Current level info
+  const curLevel=getLevel(s.xp);
+  const nextLevel=getNextLevel(s.xp);
+  const xpProg=nextLevel?((s.xp-curLevel.xp)/(nextLevel.xp-curLevel.xp)*100):100;
+
+  // Block day
+  const blockDay=s.blockStartDate?Math.min(28,Math.max(1,Math.floor((new Date(today())-new Date(s.blockStartDate))/864e5)+1)):1;
+
+  // Tracker emoji
+  const trackerEmoji=s.shop.equipped?.avatar?SHOP.avatars.find(a=>a.id===s.shop.equipped.avatar)?.emoji||TRACKER_EMOJI:TRACKER_EMOJI;
+
+  // ═══════════════════════════════ RENDER ═══════════════════════════════
+  if(loading)return(
+    React.createElement('div',{className:'loading-screen'},
+      React.createElement('div',{style:{fontSize:48}},'❤️'),
+      React.createElement('div',{style:{fontFamily:'Playfair Display',fontSize:24}},APP_NAME),
+      React.createElement('div',null,'Loading topics...'),
+      React.createElement('div',{className:'loading-bar'},React.createElement('div',{className:'loading-fill',style:{width:loadProg+'%'}})),
+      React.createElement('div',null,loadProg+'%')
+    )
+  );
+
+  const Sidebar=()=>React.createElement('div',{className:`sidebar ${drawerOpen?'mobile-open':''}`},
+    React.createElement('div',{className:'sidebar-logo'},APP_NAME),
+    React.createElement('div',{className:'sidebar-tag'},TAGLINE),
+    // Theme toggle
+    React.createElement('button',{className:'theme-toggle',onClick:()=>up(p=>({...p,theme:p.theme==='dark'?'light':'dark'}))},
+      s.theme==='dark'?'🌙 Night Shift':'☀️ Day Shift'
+    ),
+    // XP bar
+    React.createElement('div',{className:'xp-bar-wrap'},
+      React.createElement('div',{className:'xp-bar-label'},
+        React.createElement('span',null,`Lv.${curLevel.level} ${curLevel.name}`),
+        mult>1?React.createElement('span',{className:'mult-badge'},`×${mult.toFixed(1)}`):null
+      ),
+      React.createElement('div',{className:'xp-bar-outer'},
+        React.createElement('div',{className:'xp-bar-fill',style:{width:xpProg+'%'}},
+          React.createElement('span',{className:`xp-tracker${trackerSpin?' spin':''}`},trackerEmoji)
+        )
+      ),
+      React.createElement('div',{className:'xp-bar-text'},nextLevel?`${s.xp} / ${nextLevel.xp} XP`:'MAX LEVEL')
+    ),
+    // Block progress
+    React.createElement('div',{className:'block-prog'},
+      React.createElement('div',{className:'block-prog-label'},blockDay>28?'Block Complete! 🎉':`Block Day ${blockDay} of 28`),
+      React.createElement('div',{className:'block-prog-bar'},React.createElement('div',{className:'block-prog-fill',style:{width:Math.min(100,blockDay/28*100)+'%'}})),
+      blockDay<=28?React.createElement('div',{className:'block-prog-sub'},`${28-blockDay} days left`):null
+    ),
+    // Stats
+    React.createElement('div',{className:'sidebar-stats'},
+      React.createElement('div',{className:'stat-pill'},React.createElement('div',{className:'val'},'🪙 '+s.coins),React.createElement('div',null,'Coins')),
+      React.createElement('div',{className:'stat-pill'},React.createElement('div',{className:'val'},'🔥 '+s.streak.count),React.createElement('div',null,'Streak'))
+    ),
+    // Topic list
+    React.createElement('div',{style:{fontSize:11,color:'var(--text-muted)',marginTop:8,marginBottom:4}},`Topics (${topics.length})`),
+    React.createElement('div',{className:'topic-list'},
+      topics.map(t=>React.createElement('div',{key:t.id,className:'topic-list-item',onClick:()=>openTopic(t)},
+        s.topicsOpened.includes(t.id)?React.createElement('span',{className:'check'},'✓'):React.createElement('span',{style:{width:10}},''),
+        t.title.length>35?t.title.slice(0,35)+'…':t.title
+      ))
+    ),
+    // Challenge
+    React.createElement('div',{className:'challenge-widget'},
+      React.createElement('h4',null,'🏆 '+challenge.name),
+      React.createElement('p',null,challenge.desc),
+      React.createElement('div',{className:'challenge-bar'},React.createElement('div',{className:'challenge-fill',style:{width:Math.min(100,(s.weeklyChallenge.progress||0)/challenge.target*100)+'%'}})),
+      React.createElement('div',{className:'challenge-sub'},`${Math.min(s.weeklyChallenge.progress||0,challenge.target)} / ${challenge.target}`)
+    ),
+    // Buttons
+    React.createElement('button',{className:'sidebar-btn',onClick:()=>setModal('shop')},'🛒 Shop'+(curLevel.level<3?' (Lv.3)':'')),
+    React.createElement('button',{className:'sidebar-btn',onClick:()=>setModal('profile')},'👤 Profile'),
+    React.createElement('button',{className:'sidebar-btn',onClick:()=>up(p=>({...p,soundEnabled:!p.soundEnabled}))},s.soundEnabled?'🔊 Sound ON':'🔇 Sound OFF'),
+    React.createElement('button',{className:'sidebar-btn',onClick:()=>{setView('home');setCurrentTopic(null);setDrawerOpen(false)}},'🏠 Home')
+  );
+
+  // Mobile top bar
+  const MobileTop=()=>React.createElement('div',{className:'mobile-top'},
+    React.createElement('button',{className:'hamburger',onClick:()=>setDrawerOpen(!drawerOpen)},'☰'),
+    React.createElement('span',{style:{fontFamily:'Playfair Display',fontWeight:800,fontSize:16}},APP_NAME),
+    React.createElement('div',{className:'top-right'},
+      React.createElement('span',null,`Lv.${curLevel.level}`),
+      mult>1?React.createElement('span',{className:'mult-badge'},`×${mult.toFixed(1)}`):null,
+      React.createElement('span',null,'🪙'+s.coins),
+      React.createElement('span',{style:{cursor:'pointer'},onClick:()=>up(p=>({...p,theme:p.theme==='dark'?'light':'dark'}))},s.theme==='dark'?'🌙':'☀️'),
+      React.createElement('span',{style:{cursor:'pointer'},onClick:()=>setModal('profile')},'👤')
+    )
+  );
+
+  // Home view
+  const HomeView=()=>React.createElement('div',null,
+    React.createElement('div',{className:'hero-title'},APP_NAME),
+    React.createElement('div',{className:'hero-sub'},`${topics.length} cardiology topics • ${topics.reduce((a,t)=>(t.sections.quizzes||[]).length+a,0)} quiz cases • ${topics.reduce((a,t)=>(t.sections.micro_questions||[]).length+a,0)} micro-questions`),
+    React.createElement('div',{className:'topic-grid'},
+      topics.map((t,i)=>React.createElement('div',{
+        key:t.id,className:'topic-card',
+        style:{animationDelay:i*50+'ms'},
+        onClick:()=>openTopic(t)
+      },
+        React.createElement('div',{className:'accent-bar',style:{background:ACCENT_COLORS[i%ACCENT_COLORS.length]}}),
+        s.topicsOpened.includes(t.id)?React.createElement('span',{className:'opened-check'},'✓'):null,
+        React.createElement('div',{className:'topic-card-title'},t.title),
+        React.createElement('div',{className:'topic-card-tags'},t.tags.slice(0,3).map(tag=>React.createElement('span',{key:tag,className:'tag-pill'},tag))),
+        React.createElement('div',{className:'topic-card-meta'},
+          React.createElement('span',null,`📝 ${(t.sections.quizzes||[]).length} cases`),
+          React.createElement('span',null,`🔄 ${(t.sections.micro_questions||[]).length} micro-Qs`)
+        )
+      ))
+    )
+  );
+
+  // Section observer component
+  const SectionCard=({sectionKey,title,className,children,topicId})=>{
+    const ref=useRef(null);
+    const viewed=(s.sectionsViewed[topicId]||[]).includes(sectionKey);
+    useEffect(()=>{
+      if(!ref.current||viewed)return;
+      const obs=new IntersectionObserver(([entry])=>{
+        if(entry.isIntersecting){onSectionView(topicId,sectionKey);obs.disconnect()}
+      },{threshold:0.3});
+      obs.observe(ref.current);
+      return()=>obs.disconnect();
+    },[topicId,sectionKey,viewed]);
+    return React.createElement('div',{ref,className:`section-card ${className||''}`},
+      React.createElement('div',{className:'section-header'},
+        React.createElement('h3',null,title),
+        React.createElement('span',{className:`section-viewed${viewed?' seen':''}`},viewed?'👁️':'○')
+      ),
+      children
+    );
+  };
+
+  // Detail view
+  const DetailView=()=>{
+    const t=currentTopic;
+    if(!t)return null;
+    const sec=t.sections;
+    return React.createElement('div',null,
+      React.createElement('button',{className:'back-btn',onClick:()=>{setView('home');setCurrentTopic(null)}},'← Back'),
+      React.createElement('h2',{className:'detail-title'},t.title),
+      React.createElement('div',{style:{display:'flex',gap:6,flexWrap:'wrap',marginBottom:16}},t.tags.map(tag=>React.createElement('span',{key:tag,className:'tag-pill'},tag))),
+      // Panic Card
+      sec.panic_card?.length?React.createElement(SectionCard,{sectionKey:'panic_card',title:'🚨 Panic Card',className:'panic',topicId:t.id},
+        React.createElement('ul',{className:'bullet-list'},sec.panic_card.map((b,i)=>React.createElement('li',{key:i},renderBulletText(b))))
+      ):null,
+      // Brief Overview
+      sec.brief_overview?.length?React.createElement(SectionCard,{sectionKey:'brief_overview',title:'📋 Brief Overview',className:'overview',topicId:t.id},
+        React.createElement('ul',{className:'bullet-list'},sec.brief_overview.map((b,i)=>React.createElement('li',{key:i},renderBulletText(b))))
+      ):null,
+      // ICU Triggers
+      sec.icu_consult_triggers?.length?React.createElement(SectionCard,{sectionKey:'icu_consult_triggers',title:'🏥 ICU/Consult Triggers',className:'icu',topicId:t.id},
+        React.createElement('ul',{className:'bullet-list'},sec.icu_consult_triggers.map((b,i)=>React.createElement('li',{key:i},renderBulletText(b))))
+      ):null,
+      // Orders
+      sec.orders_to_place_now?.length?React.createElement(SectionCard,{sectionKey:'orders_to_place_now',title:'📦 Orders to Place Now',className:'orders',topicId:t.id},
+        React.createElement('ul',{className:'bullet-list'},sec.orders_to_place_now.map((b,i)=>React.createElement('li',{key:i},renderBulletText(b))))
+      ):null,
+      // Quizzes
+      (sec.quizzes||[]).map((q,qi)=>React.createElement('div',{key:qi,className:'quiz-card'},
+        React.createElement('h3',null,`📝 ${q.title||'ABIM-Style Case '+(qi+1)}`),
+        React.createElement('div',{className:'quiz-stem'},renderBulletText(q.stem)),
+        q.options.map(opt=>{
+          const qId=t.id+'Q'+qi;
+          const answered=s.quizAnswers[qId];
+          let cls='quiz-option';
+          if(answered){
+            cls+=' answered';
+            if(opt.letter===q.correct)cls+=' correct';
+            else if(opt.letter===answered)cls+=' wrong';
+          }
+          return React.createElement('button',{key:opt.letter,className:cls,onClick:(e)=>onQuizAnswer(qId,opt.letter,q.correct,e)},
+            `${opt.letter}. ${opt.text}`
+          );
+        }),
+        s.quizAnswers[t.id+'Q'+qi]&&q.rationale?React.createElement('div',{className:'quiz-rationale'},renderBulletText(q.rationale)):null
+      )),
+      // Micro questions
+      (sec.micro_questions||[]).length?React.createElement(SectionCard,{sectionKey:'micro_questions',title:'🔄 Check Yourself',className:'',topicId:t.id},
+        React.createElement('div',{className:'micro-grid'},
+          (sec.micro_questions||[]).map(mq=>{
+            const flipped=s.microFlipped.includes(mq.id);
+            return React.createElement('div',{key:mq.id,className:'micro-card',onClick:()=>{if(!flipped)onMicroFlip(mq.id)}},
+              React.createElement('div',{className:'q-text'},renderBulletText(mq.q)),
+              flipped?React.createElement('div',{className:'a-text'},renderBulletText(mq.a)):React.createElement('div',{style:{fontSize:11,color:'var(--text-muted)',marginTop:8}},'Tap to reveal')
+            );
+          })
+        )
+      ):null,
+      // CDI
+      sec.cdi?.length?React.createElement(SectionCard,{sectionKey:'cdi',title:'📝 CDI Documentation',className:'cdi',topicId:t.id},
+        React.createElement('ul',{className:'bullet-list'},sec.cdi.map((b,i)=>React.createElement('li',{key:i},renderBulletText(b))))
+      ):null,
+      // References
+      sec.references?.length?React.createElement(SectionCard,{sectionKey:'references',title:'📚 Guidelines & References',className:'refs',topicId:t.id},
+        sec.references.map((r,i)=>r.url?React.createElement('a',{key:i,className:'ref-link',href:r.url,target:'_blank',rel:'noopener'},r.label||r.url):React.createElement('div',{key:i,className:'ref-link'},r.label))
+      ):null
+    );
+  };
+
+  // Profile Modal
+  const ProfileModal=()=>React.createElement('div',{className:'modal-overlay',onClick:()=>setModal(null)},
+    React.createElement('div',{className:'modal-box',onClick:e=>e.stopPropagation()},
+      React.createElement('button',{className:'modal-close',onClick:()=>setModal(null)},'✕'),
+      React.createElement('h2',{className:'modal-title'},'👤 Profile'),
+      React.createElement('div',{style:{marginBottom:12}},
+        React.createElement('input',{style:{background:'var(--input-bg)',border:'1px solid var(--border)',borderRadius:8,padding:'6px 12px',color:'var(--text-primary)',fontSize:14,width:'100%',fontFamily:'DM Sans'},value:s.username,onChange:e=>up({username:e.target.value}),placeholder:'Your name'})
+      ),
+      React.createElement('div',{className:'profile-stats'},
+        React.createElement('div',{className:'profile-stat'},React.createElement('div',{className:'val'},curLevel.level),React.createElement('div',{className:'lbl'},curLevel.name)),
+        React.createElement('div',{className:'profile-stat'},React.createElement('div',{className:'val'},s.xp.toLocaleString()),React.createElement('div',{className:'lbl'},'Total XP')),
+        React.createElement('div',{className:'profile-stat'},React.createElement('div',{className:'val'},s.coins),React.createElement('div',{className:'lbl'},'Coins')),
+        React.createElement('div',{className:'profile-stat'},React.createElement('div',{className:'val'},s.streak.count),React.createElement('div',{className:'lbl'},'Day Streak')),
+        React.createElement('div',{className:'profile-stat'},React.createElement('div',{className:'val'},s.topicsOpened.length),React.createElement('div',{className:'lbl'},'Topics')),
+        React.createElement('div',{className:'profile-stat'},React.createElement('div',{className:'val'},Object.keys(s.quizAnswers).length),React.createElement('div',{className:'lbl'},'Quizzes'))
+      ),
+      React.createElement('h3',{style:{fontSize:16,marginBottom:8}},'Badges ('+s.badges.length+'/'+BADGES.length+')'),
+      React.createElement('div',{className:'badge-grid'},
+        BADGES.map(b=>{
+          const unlocked=s.badges.includes(b.id);
+          const isSecret=b.cat==='secret'&&!unlocked;
+          return React.createElement('div',{key:b.id,className:`badge-item${unlocked?'':' locked'}`,title:unlocked?b.name:(isSecret?'???':b.name)},
+            React.createElement('div',{className:'badge-emoji'},isSecret?'❓':b.emoji),
+            React.createElement('div',{className:'badge-name'},isSecret?'???':b.name)
+          );
+        })
+      ),
+      React.createElement('div',{className:'profile-actions'},
+        React.createElement('button',{onClick:()=>{const blob=new Blob([JSON.stringify(s,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='rhythm-reason-backup.json';a.click()}},'📥 Export'),
+        React.createElement('button',{onClick:()=>{const input=document.createElement('input');input.type='file';input.accept='.json';input.onchange=(e)=>{const file=e.target.files[0];if(file){const reader=new FileReader();reader.onload=(ev)=>{try{const data=JSON.parse(ev.target.result);setState({...defaultState,...data});saveState({...defaultState,...data});toast('✅ Data imported!')}catch(err){toast('❌ Invalid file')}};reader.readAsText(file)}};input.click()}},'📤 Import'),
+        React.createElement('button',{onClick:()=>{up(p=>({...p,blockStartDate:today()}));toast('Block reset to today')}},'🔄 Reset Block'),
+        React.createElement('button',{className:'danger',onClick:()=>{const r=prompt('Type RESET to confirm');if(r==='RESET'){setState({...defaultState});saveState({...defaultState});toast('Data reset')}}},'🗑️ Reset All')
+      )
+    )
+  );
+
+  // Shop Modal
+  const ShopModal=()=>{
+    const [tab,setTab]=useState('avatars');
+    const locked=curLevel.level<3;
+    const items=tab==='avatars'?SHOP.avatars:tab==='memes'?SHOP.memes:tab==='certs'?SHOP.certs:SHOP.boosts;
+    const buy=(item)=>{
+      if(s.coins<item.price)return toast('Not enough coins!');
+      up(prev=>{
+        const n={...prev,coins:prev.coins-item.price,shop:{...prev.shop,purchased:[...prev.shop.purchased,item.id]}};
+        if(item.consumable&&item.id==='boost-24h')n.boostExpiry=new Date(Date.now()+864e5).toISOString();
+        return n;
+      });
+      toast(`🛒 Purchased: ${item.name}`);
+      if(s.soundEnabled)playSound('coin');
+    };
+    const equip=(item,type)=>{up(prev=>({...prev,shop:{...prev.shop,equipped:{...prev.shop.equipped,[type]:item.id}}}));toast(`Equipped: ${item.emoji||item.name}`)};
+
+    return React.createElement('div',{className:'modal-overlay',onClick:()=>setModal(null)},
+      React.createElement('div',{className:'modal-box',onClick:e=>e.stopPropagation()},
+        React.createElement('button',{className:'modal-close',onClick:()=>setModal(null)},'✕'),
+        React.createElement('h2',{className:'modal-title'},'🛒 Shop'),
+        locked?React.createElement('div',{style:{textAlign:'center',padding:32,color:'var(--text-muted)'}},'🔒 Unlocks at Level 3'):React.createElement(React.Fragment,null,
+          React.createElement('div',{style:{marginBottom:12,color:'var(--text-secondary)',fontSize:13}},'🪙 '+s.coins+' coins available'),
+          React.createElement('div',{className:'shop-tabs'},
+            ['avatars','memes','certs','boosts'].map(t=>React.createElement('button',{key:t,className:`shop-tab${tab===t?' active':''}`,onClick:()=>setTab(t)},t.charAt(0).toUpperCase()+t.slice(1)))
+          ),
+          items.map(item=>{
+            const owned=s.shop.purchased.includes(item.id);
+            const equipped=s.shop.equipped?.avatar===item.id||s.shop.equipped?.meme===item.id;
+            return React.createElement('div',{key:item.id,className:'shop-item'},
+              React.createElement('div',{className:'shop-item-info'},
+                item.emoji?React.createElement('span',{className:'shop-item-emoji'},item.emoji):null,
+                React.createElement('div',{className:'shop-item-text'},
+                  React.createElement('div',{className:'name'},item.name),
+                  item.desc?React.createElement('div',null,item.desc):null
+                )
+              ),
+              owned?(equipped?React.createElement('span',{className:'shop-btn owned'},'Equipped'):
+                (tab==='avatars'?React.createElement('button',{className:'shop-btn equip',onClick:()=>equip(item,'avatar')},'Equip'):
+                React.createElement('span',{className:'shop-btn owned'},'Owned'))
+              ):React.createElement('button',{className:'shop-btn buy',onClick:()=>buy(item)},'🪙 '+item.price)
+            );
+          })
+        )
+      )
+    );
+  };
+
+  return React.createElement('div',{className:`app-wrap ${s.theme==='light'?'theme-light':''}`},
+    React.createElement(MobileTop,null),
+    drawerOpen?React.createElement('div',{className:'drawer-overlay open',onClick:()=>setDrawerOpen(false)}):null,
+    React.createElement(Sidebar,null),
+    React.createElement('div',{className:'main-content'},
+      view==='home'?React.createElement(HomeView,null):React.createElement(DetailView,null)
+    ),
+    // Toasts
+    React.createElement('div',{className:'toast-container'},toasts.map(t=>React.createElement('div',{key:t.id,className:'toast'},t.msg))),
+    // XP flies
+    xpFlies.map(f=>React.createElement('div',{key:f.id,className:'xp-fly',style:{left:f.x,top:f.y}},'+'+f.amount+' XP')),
+    // Modals
+    modal==='profile'?React.createElement(ProfileModal,null):null,
+    modal==='shop'?React.createElement(ShopModal,null):null
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+</script>
+</body>
+</html>
